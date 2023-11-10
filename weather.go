@@ -20,8 +20,10 @@ var debugMode bool = false
 var defaultPort string = "8080"
 var weatherAPIKey string
 
+// MattermostResponse represents the key fields that we need to deliver in the
+// response to the Mattermost slash command.
 type MattermostResponse struct {
-	ResponseType string `json:"resppnse_type"`
+	ResponseType string `json:"response_type"`
 	Text         string `json:"text"`
 }
 
@@ -69,6 +71,7 @@ func weatherHandler(responseWriter http.ResponseWriter, inboundRequest *http.Req
 
 	// Retrieve the location from the GET request
 	location := inboundRequest.URL.Query().Get("text")
+	DebugPrint("Text: " + location)
 	if location == "" {
 		location = "auto:ip"
 	}
@@ -84,8 +87,11 @@ func weatherHandler(responseWriter http.ResponseWriter, inboundRequest *http.Req
 	currentTemp, _ := jsonparser.GetFloat([]byte(apiResponse), "current", "temp_c")
 	currentConditions, _ := jsonparser.GetString([]byte(apiResponse), "current", "condition", "text")
 
+	// responseMessage contains a Markdown message that gets posted to the channel
 	responseMessage := fmt.Sprintf("Current weather in %s: %v°C - %s", currentLocation, currentTemp, currentConditions)
 
+	// responsePayload.ResponseType can be "in_channel" to be posted to the whole channel, or "ephemeral"
+	// to be only visible to the person running the slash command.
 	responsePayload := MattermostResponse{
 		ResponseType: "in_channel",
 		Text:         responseMessage,
