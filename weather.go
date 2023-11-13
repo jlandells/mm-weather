@@ -30,6 +30,8 @@ type MattermostResponse struct {
 // LogLevel is used to refer to the type of message that will be written using the logging code.
 type LogLevel string
 
+const defaultConfigFile string = "config.json"
+
 const (
 	debugLevel   LogLevel = "DEBUG"
 	infoLevel    LogLevel = "INFO"
@@ -63,11 +65,29 @@ func DebugPrint(message string) {
 	}
 }
 
+// Utility functions
+
+// FileExists is used to validate that a file really exists and is an actual file, rather than a directory.
+func FileExists(filename string) (bool, error) {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	if info.IsDir() {
+		LogMessage(errorLevel, filename+" is a directory!")
+		return false, nil
+	}
+	return true, nil
+}
+
 // Integration functions
 
 // weatherHandler is the primary function for processing the incoming slash command
 func weatherHandler(responseWriter http.ResponseWriter, inboundRequest *http.Request) {
-	DebugPrint("Received inbound request")
+	LogMessage(infoLevel, "Received inbound request")
 
 	// Retrieve the location from the GET request
 	location := inboundRequest.URL.Query().Get("text")
@@ -169,12 +189,13 @@ func main() {
 	flag.Parse()
 
 	debugMode = debugFlag
+	var exists bool
 
 	// If the API token is not passed on the command line, we should check whether it exists as an
 	// environment variable before reading the value from the config file.
 	if apiToken == "" {
 		// Not set via command line - check environment
-		apiToken, exists := os.LookupEnv("WEATHER_API_TOKEN")
+		apiToken, exists = os.LookupEnv("WEATHER_API_TOKEN")
 		if !exists {
 			// Still no API token - let's check the config file
 			viper.SetConfigFile(configFile)
@@ -183,12 +204,12 @@ func main() {
 				panic(fmt.Errorf("fatal error processing config file: %w", err))
 			}
 			apiToken = viper.GetString("apiKey")
-			DebugPrint("Obtained API key '" + apiToken + "' from config file")
+			DebugPrint("Obtained API key from config file")
 		} else {
-			DebugPrint("Obtained API key '" + apiToken + "' from environment")
+			DebugPrint("Obtained API key from environment")
 		}
 	} else {
-		DebugPrint("Obtained API key '" + apiToken + "' from command line")
+		DebugPrint("Obtained API key from command line")
 	}
 
 	if apiToken == "" {
@@ -198,13 +219,11 @@ func main() {
 
 	weatherAPIKey = apiToken
 
-	var exists bool
-
 	// In the same way that we validated the API key, we need a valid port parameter, except in this case
 	// we have a programmatic default
 	if listenPort == "" {
 		// Not set via command line - check environment
-		listenPort, exists = os.LookupEnv("WEATHER_API_TOKEN")
+		listenPort, exists = os.LookupEnv("MM_LISTEN_PORT")
 		if !exists {
 			// Still no API token - let's check the config file (which we should already have!)
 			listenPort = viper.GetString("listenPort")
@@ -214,7 +233,6 @@ func main() {
 			} else {
 				DebugPrint("Obtained listen port '" + listenPort + "' from config file")
 			}
-			DebugPrint("Obtained listen port '" + listenPort + "' from config file")
 		} else {
 			DebugPrint("Obtained listen port '" + listenPort + "' from environment")
 		}
