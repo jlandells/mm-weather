@@ -16,6 +16,8 @@ import (
 
 // Defaults & Type Definitions
 
+const Version = "0.2.1"
+
 var debugMode bool = false
 var defaultPort string = "8080"
 var weatherAPIKey string
@@ -176,6 +178,8 @@ func callWeatherAPI(location string) (string, error) {
 }
 
 func main() {
+	LogMessage(infoLevel, "Starting Mattermost Weather Slash Command demo application, version: "+Version)
+
 	var debugFlag bool
 	var configFile string
 	var apiToken string
