@@ -35,6 +35,8 @@ cd mm-weather
     "apiKey": "your_api_key_here"
 }
 ```
+> [!NOTE]
+> The config file can also contain an option "port" parameter, should you choose to use a different port other than the default of 8080 for your server
 
 3. Building the Application:
 ```go
@@ -45,8 +47,12 @@ go build
 ```bash
 ./mm-weather_[platform-specific-suffix]
 ```
+> [!NOTE]
+> Additional command line parameters are available.  See below for details.
 
 ## Usage
+
+### In Mattermost
 
 1. Register the Slash Command in Mattermost:
     - In your Mattermost instance, go to the integrations section and add a new slash command.
@@ -54,6 +60,18 @@ go build
     - Point the request URL to where this Go application is hosted with the /weather endpoint.
 2. Using the Command in Mattermost:
     - In any Mattermost channel, type `/weather [location]` to get the weather information for the specified location.
+
+### Configuring the Application
+
+There are a number of optional parameters that can be supplied to the application via environment variables and via the command line.  Note that the command line
+arguments take precedence.
+
+| CLI Argument | Environment Variable | Description |
+|---|---|---|
+| `-config=<path>` | | Path to alternate config file.  Default: config.json |
+| `-token=<your_api_key>` | `WEATHER_API_TOKEN` | Overrides the value provided in the config file |
+| `-port=<port>` | `MM_LISTEN_PORT` | Alternative listening port for the local application |
+| `-debug` | | Runs the code in debug mode for additional logging |
 
 ## Contributing
 
