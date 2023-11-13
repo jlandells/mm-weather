@@ -182,7 +182,7 @@ func main() {
 	var listenPort string
 
 	flag.BoolVar(&debugFlag, "debug", false, "Enable debug mode")
-	flag.StringVar(&configFile, "config", "config.json", "Override default config file (config.json)")
+	flag.StringVar(&configFile, "config", defaultConfigFile, "Override default config file ("+defaultConfigFile+")")
 	flag.StringVar(&apiToken, "token", "", "Override the API token supplied in the config file")
 	flag.StringVar(&listenPort, "port", "", "Override the port that this utility should listen on")
 
@@ -190,6 +190,17 @@ func main() {
 
 	debugMode = debugFlag
 	var exists bool
+
+	// Have we been passed a real config file?
+	exists, err := FileExists(configFile)
+	if err != nil {
+		LogMessage(warningLevel, "Error validating config file!  Using default.")
+		configFile = defaultConfigFile
+	}
+	if !exists {
+		LogMessage(warningLevel, "Supplied config file ("+configFile+") does not exist or is not a valid file.  Using default.")
+		configFile = defaultConfigFile
+	}
 
 	// If the API token is not passed on the command line, we should check whether it exists as an
 	// environment variable before reading the value from the config file.
